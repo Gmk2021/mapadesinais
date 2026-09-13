@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Análise estatística do histórico da Mega-Sena, sem previsão de resultados.">
+  <title>Radar Mega-Sena | Mapa de Sinais</title>
+  <link rel="stylesheet" href="/mega-sena/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307090d'/%3E%3Ccircle cx='32' cy='32' r='20' fill='none' stroke='%233dff9a' stroke-width='5'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial' font-size='20' font-weight='bold' fill='%23d7e3ef'%3E60%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<header>
+  <div><a class="back" href="/">Mapa de Sinais</a><h1>RADAR <span>MEGA-SENA</span></h1><div class="sub">Análise histórica das 60 dezenas · sem previsão de acerto</div><div class="badge">SOMENTE ESTATÍSTICA DO PASSADO</div></div>
+  <div class="controls"><label class="sr" for="janela">Período analisado</label><select id="janela" class="sel"><option value="todos">Histórico completo</option><option value="500">Últimos 500</option><option value="200">Últimos 200</option><option value="100">Últimos 100</option><option value="50">Últimos 50</option></select><button id="btn">Atualizar histórico</button></div>
+</header>
+<main class="wrap">
+  <div id="status" class="status" aria-live="polite">Carregando histórico…</div>
+  <section id="cards" class="cards" aria-label="Resumo"></section>
+  <section class="card guide"><div class="k">Como ler o radar</div><div class="guide-grid"><p><b>freq</b> — vezes que a dezena saiu na janela escolhida.</p><p><b>atraso</b> — concursos desde a última ocorrência.</p><p><b>alta / estável / baixa</b> — compara os 10 concursos recentes aos 10 anteriores.</p><p><i class="legend green"></i> atraso de 0 a 3</p><p><i class="legend yellow"></i> atraso de 4 a 12</p><p><i class="legend blue"></i> atraso de 13 ou mais</p></div><div class="notice">Cor, atraso e frequência não predizem o próximo concurso. Cada sorteio é independente.</div></section>
+  <section id="balls" class="balls" aria-label="Análise das dezenas"></section>
+  <section class="three"><div class="card"><div class="k">Mais frequentes</div><div id="mais"></div></div><div class="card"><div class="k">Menos frequentes</div><div id="menos"></div></div><div class="card"><div class="k">Mais atrasadas</div><div id="atraso"></div></div></section>
+  <section class="two"><div class="card"><div class="k">Últimos concursos</div><div id="recentes"></div></div><div class="card"><div class="k">Pares × ímpares</div><div id="pi"></div><div class="k section-title">6 recortes estatísticos</div><div class="sub">Não são previsões de acerto. São somente recortes do histórico selecionado.</div><div id="palpites"></div></div></section>
+  <section class="card"><div class="k">Distribuição da soma das 6 dezenas</div><div id="somas"></div></section>
+  <footer>Este painel não aumenta a chance de ganhar. Cada concurso da Mega-Sena é independente. Frequência e atraso descrevem apenas o que já ocorreu. Fonte: espelho público do histórico da Caixa e conferência do último concurso na API da Caixa, quando disponível.</footer>
+</main>
+<script src="/mega-sena/app.js" defer></script>
+</body></html>
+
