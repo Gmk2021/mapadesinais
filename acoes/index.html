@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mapa de Sinais — Ações B3</title>
+  <meta name="description" content="Radar educacional de ações da B3. Análise técnica ilustrativa, sem promessa de lucro." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Sora:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect fill='%23070a12' width='64' height='64' rx='14'/><text x='10' y='44' font-size='28' fill='%236ee7ff' font-family='monospace'>B3</text></svg>" />
+</head>
+<body>
+  <div class="wrap">
+    <a href="/" style="display:inline-block;color:#8b97ab;text-decoration:none;font-size:13px;margin-bottom:12px">← Mapa de Sinais</a>
+    <header class="top">
+      <div class="brand">
+        <div class="logo">B3</div>
+        <div>
+          <h1>Mapa de Sinais — Ações</h1>
+          <p class="sub">Radar educacional da B3 · <b id="stamp">carregando…</b></p>
+        </div>
+      </div>
+      <div class="actions">
+        <input id="q" class="search" placeholder="Filtrar ticker ou nome" />
+        <button class="btn" id="btnVistaLista" type="button">Lista</button>
+        <button class="btn" id="btnVistaMosaico" type="button">Mosaico</button>
+        <button class="btn primary" id="btnRefresh" type="button">Atualizar</button>
+      </div>
+    </header>
+
+    <div class="disclaimer">
+      Análise de mercado com caráter educacional. Indicadores descrevem o recorte recente
+      e <strong>não prometem lucro</strong>, não constituem recomendação de compra ou venda
+      e não substituem assessoria. Dados com atraso (Yahoo Finance).
+    </div>
+
+    <section class="kpis" id="kpis"></section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Mapa setorial da watchlist</h2>
+        <div class="heat" id="heat"></div>
+      </article>
+      <article class="card">
+        <h2>Universo observado</h2>
+        <div class="universe" id="universe"></div>
+        <p class="footer" style="margin-top:16px">
+          Score técnico é ilustrativo (médias, RSI e variação). Serve para leitura do
+          painel, não para decidir operação.
+        </p>
+      </article>
+    </section>
+
+    <div class="filters" id="filters"></div>
+    <div id="board"></div>
+
+    <p class="footer">
+      Fonte: Yahoo Finance via snapshot publicado. Horário de Brasília.<br />
+      Dados podem estar atrasados. Este painel não constitui recomendação de investimento.
+    </p>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
