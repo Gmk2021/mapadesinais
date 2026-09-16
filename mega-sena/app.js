@@ -60,7 +60,7 @@ function render(d){
   $("mais").innerHTML=table(d.mais); $("menos").innerHTML=table(d.menos); $("atraso").innerHTML=table(d.atrasadas);
   $("recentes").innerHTML=d.recentes.map(r=>`<div class="pill"><b>#${r.concurso}</b> · ${r.data}<div class="ult">${chips(r.dezenas)}</div><span class="sub">${r.pares} pares · ${r.impares} ímpares · soma ${r.soma}</span></div>`).join("");
   const maxPI=Math.max(...d.par_impar.distribuicao.map(x=>x.qtd),1); $("pi").innerHTML=d.par_impar.distribuicao.map(x=>`<div class="barrow"><div style="width:72px;font-size:.75rem">${x.combo}</div><div class="bar"><span style="width:${100*x.qtd/maxPI}%"></span></div><div class="sub" style="width:76px">${x.qtd} (${x.pct}%)</div></div>`).join("");
-  $("palpites").innerHTML=d.palpites.map((p,i)=>`<div class="pill"><b>${i+1}. ${p.nome}</b><div class="ult">${chips(p.dezenas)}</div><span class="sub">${p.pares}p · ${p.impares}i · soma ${p.soma}<br>${p.criterion}</span></div>`).join("");
+  $("palpites").innerHTML=d.palpites.map((p,i)=>`<div class="pill"><b>${i+1}. ${p.name}</b><div class="ult">${chips(p.dezenas)}</div><span class="sub">${p.pares}p · ${p.impares}i · soma ${p.soma}<br>${p.criterion}</span></div>`).join("");
   const maxSum=Math.max(...d.soma.faixas.map(x=>x.qtd),1); $("somas").innerHTML=d.soma.faixas.map(x=>`<div class="barrow"><div style="width:90px;font-size:.75rem">${x.de}–${x.ate}</div><div class="bar"><span style="width:${100*x.qtd/maxSum}%"></span></div><div class="sub" style="width:40px">${x.qtd}</div></div>`).join("");
 }
 
