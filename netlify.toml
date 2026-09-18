@@ -8,6 +8,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/lotofacil-data"
+  to = "/.netlify/functions/lotofacil-data"
+  status = 200
+
+[[redirects]]
   from = "/api/crypto-radar"
   to = "/.netlify/functions/crypto-radar"
   status = 200
