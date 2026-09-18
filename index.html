@@ -3,26 +3,97 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Mapa de Sinais: painéis de análise estatística da Mega-Sena, Lotofácil, criptomoedas, ações e notícias.">
-  <title>Mapa de Sinais</title>
+  <title>Radar Macro · Mapa de Sinais</title>
+  <meta name="description" content="Selic, CDI, IPCA e dólar PTAX — série histórica do Banco Central.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307090d'/%3E%3Cpath d='M12 45L25 32l9 7 18-21' fill='none' stroke='%233dff9a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <style>
-    :root{color-scheme:dark;--bg:#07090d;--panel:#0e141b;--line:#1c2a38;--text:#d7e3ef;--muted:#8297ab;--green:#3dff9a;--blue:#3aa0ff}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(900px 450px at 12% -10%,#0b2a22,transparent 55%),radial-gradient(700px 350px at 100% 0,#0a1d33,transparent 48%),var(--bg);color:var(--text);font:16px/1.5 Inter,Segoe UI,system-ui,sans-serif}
-    main{width:min(1080px,calc(100% - 32px));margin:auto;padding:64px 0}.brand{font-size:.86rem;letter-spacing:.16em;text-transform:uppercase;color:var(--green)}h1{font-size:clamp(2.2rem,7vw,5.2rem);line-height:1;margin:.25em 0}.lead{max-width:680px;color:var(--muted);font-size:1.1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:44px}.card{display:block;min-height:230px;padding:26px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,var(--panel),#0a1016);color:inherit;text-decoration:none;transition:.2s transform,.2s border-color}.card:hover{transform:translateY(-3px);border-color:var(--green)}.card small{color:var(--green);text-transform:uppercase;letter-spacing:.1em}.card h2{font-size:1.55rem;margin:18px 0 8px}.card p{color:var(--muted);margin:0}.soon{opacity:.68}.soon small{color:var(--blue)}footer{color:var(--muted);font-size:.82rem;margin-top:48px;border-top:1px solid var(--line);padding-top:20px}
+    :root{color-scheme:dark;--bg:#07090d;--panel:#0e141b;--line:#1c2a38;--text:#d7e3ef;--muted:#8297ab;--green:#3dff9a}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(900px 450px at 12% -10%,#0b2a22,transparent 55%),radial-gradient(700px 350px at 100% 0,#0a1d33,transparent 48%),var(--bg);color:var(--text);font:16px/1.5 Inter,Segoe UI,system-ui,sans-serif}
+    main{width:min(1080px,calc(100% - 32px));margin:auto;padding:36px 0 64px}
+    a.back{color:var(--green);text-decoration:none;letter-spacing:.14em;text-transform:uppercase;font-size:.78rem}
+    h1{font-size:clamp(1.8rem,5vw,3rem);margin:.35em 0 .15em}
+    .lead{color:var(--muted);margin:0 0 28px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:28px}
+    .tile{padding:20px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,var(--panel),#0a1016)}
+    .tile small{color:var(--green);letter-spacing:.1em;text-transform:uppercase;font-size:.72rem}
+    .tile .val{font-size:2rem;font-weight:700;margin:10px 0 4px}
+    .tile .sub{color:var(--muted);font-size:.88rem}
+    table{width:100%;border-collapse:collapse;font-size:.92rem}
+    th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}
+    th{color:var(--muted);font-weight:600;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase}
+    .note{color:var(--muted);font-size:.82rem;margin-top:22px}
+    footer{color:var(--muted);font-size:.82rem;margin-top:36px;border-top:1px solid var(--line);padding-top:16px}
   </style>
 </head>
-<body><main>
-  <div class="brand">Mapa de Sinais</div>
-  <h1>Dados claros.<br>Análises responsáveis.</h1>
-  <p class="lead">Painéis para explorar informações históricas e acompanhar mercados. Estatísticas não são previsões.</p>
-  <section class="grid" aria-label="Painéis disponíveis">
-    <a class="card" href="/mega-sena/"><small>Disponível</small><h2>Radar Mega-Sena</h2><p>Frequência, atraso, pares e ímpares, somas e histórico dos concursos.</p></a>
-    <a class="card" href="/lotofacil/"><small>Disponível</small><h2>Radar Lotofácil</h2><p>Frequência, atraso, moldura e miolo, soma, repetidas e histórico das 25 dezenas.</p></a>
-    <a class="card" href="/crypto/"><small>Disponível</small><h2>Radar Crypto</h2><p>Maiores altas e quedas em pares USDT da Binance e Crypto.com.</p></a>
-    <a class="card" href="/acoes/"><small>Disponível</small><h2>Radar Ações</h2><p>Índices, setores, preços e indicadores técnicos educacionais da B3.</p></a>
-    <a class="card" href="/noticias/"><small>Disponível</small><h2>Radar Notícias</h2><p>Manchetes dos principais portais. Busca por política, fé, esportes, saúde e temas do dia.</p></a>
+<body>
+<main>
+  <a class="back" href="/">← Mapa de Sinais</a>
+  <h1>Radar Macro</h1>
+  <p class="lead">Série histórica do Banco Central. Estatística do passado — não é previsão.</p>
+  <section class="grid" id="tiles">
+    <div class="tile"><small>Selic meta</small><div class="val" id="selic">—</div><div class="sub" id="selic-d">carregando</div></div>
+    <div class="tile"><small>CDI</small><div class="val" id="cdi">—</div><div class="sub" id="cdi-d">carregando</div></div>
+    <div class="tile"><small>IPCA 12 meses</small><div class="val" id="ipca">—</div><div class="sub" id="ipca-d">carregando</div></div>
+    <div class="tile"><small>Dólar PTAX</small><div class="val" id="usd">—</div><div class="sub" id="usd-d">carregando</div></div>
   </section>
-  <footer>Conteúdo informativo. Não constitui recomendação de aposta ou investimento.</footer>
+  <table>
+    <thead><tr><th>Série</th><th>Código SGS</th><th>Último</th><th>Data</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p class="note" id="status">Fonte: Banco Central do Brasil (SGS e PTAX).</p>
+  <footer>Conteúdo informativo. Não constitui recomendação de investimento.</footer>
 </main>
-</body></html>
+<script>
+const SGS = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.";
+async function serie(id, n){
+  const url = SGS + id + "/dados/ultimos/" + n + "?formato=json";
+  const r = await fetch(url);
+  if(!r.ok) throw new Error("sgs "+id);
+  return r.json();
+}
+function last(arr){ return arr && arr.length ? arr[arr.length-1] : null; }
+function fmtPct(v, casas){ return Number(String(v).replace(",",".")).toFixed(casas).replace(".",",") + "%"; }
+function fmtNum(v, casas){ return Number(String(v).replace(",",".")).toFixed(casas).replace(".",","); }
+function ipca12(arr){
+  let acc = 1;
+  arr.forEach(p => { acc *= 1 + Number(String(p.valor).replace(",",".")) / 100; });
+  return (acc - 1) * 100;
+}
+(async () => {
+  const status = document.getElementById("status");
+  try {
+    const [selic, cdi, ipca, usd] = await Promise.all([
+      serie(432, 3),
+      serie(12, 3),
+      serie(433, 12),
+      serie(1, 5)
+    ]);
+    const s = last(selic), c = last(cdi), u = last(usd);
+    const acc = ipca12(ipca);
+    const im = last(ipca);
+    document.getElementById("selic").textContent = s ? fmtPct(s.valor, 2) : "—";
+    document.getElementById("selic-d").textContent = s ? "meta · " + s.data : "";
+    document.getElementById("cdi").textContent = c ? fmtPct(c.valor, 2) : "—";
+    document.getElementById("cdi-d").textContent = c ? "diário · " + c.data : "";
+    document.getElementById("ipca").textContent = fmtPct(acc, 2);
+    document.getElementById("ipca-d").textContent = im ? "mês " + im.data + " · " + fmtPct(im.valor, 2) : "";
+    document.getElementById("usd").textContent = u ? "R$ " + fmtNum(u.valor, 4) : "—";
+    document.getElementById("usd-d").textContent = u ? "PTAX venda · " + u.data : "";
+    const rows = [
+      ["Selic meta", "432", s],
+      ["CDI", "12", c],
+      ["IPCA mensal", "433", im],
+      ["Dólar PTAX", "1", u]
+    ];
+    document.getElementById("rows").innerHTML = rows.map(([n,cod,p]) =>
+      `<tr><td>${n}</td><td>${cod}</td><td>${p ? p.valor : "—"}</td><td>${p ? p.data : "—"}</td></tr>`
+    ).join("");
+    status.textContent = "Fonte: Banco Central do Brasil (SGS). Atualizado nesta carga da página.";
+  } catch (e) {
+    status.textContent = "Não foi possível ler o Banco Central agora. Recarregue em instantes.";
+  }
+})();
+</script>
+</body>
+</html>
