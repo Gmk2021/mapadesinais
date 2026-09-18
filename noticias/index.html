@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Radar Notícias · Mapa de Sinais</title>
+  <meta name="description" content="Manchetes dos principais portais brasileiros, com busca por tema.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307090d'/%3E%3Cpath d='M12 45L25 32l9 7 18-21' fill='none' stroke='%233dff9a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <style>
+    :root{color-scheme:dark;--bg:#07090d;--panel:#0e141b;--line:#1c2a38;--text:#d7e3ef;--muted:#8297ab;--green:#3dff9a}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(900px 450px at 12% -10%,#0b2a22,transparent 55%),radial-gradient(700px 350px at 100% 0,#0a1d33,transparent 48%),var(--bg);color:var(--text);font:16px/1.5 Inter,Segoe UI,system-ui,sans-serif}
+    main{width:min(980px,calc(100% - 32px));margin:auto;padding:36px 0 64px}
+    a.back{color:var(--green);text-decoration:none;letter-spacing:.14em;text-transform:uppercase;font-size:.78rem}
+    h1{font-size:clamp(1.8rem,5vw,3rem);margin:.35em 0 .2em}
+    .lead{color:var(--muted);margin:0 0 22px}
+    form{display:flex;gap:10px;margin-bottom:14px}
+    input{flex:1;background:#0a1016;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font-size:1rem}
+    button{background:var(--green);border:0;color:#062016;font-weight:700;border-radius:12px;padding:0 16px;cursor:pointer}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+    .chip{background:#0a1016;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 12px;font-size:.82rem;cursor:pointer}
+    .chip:hover,.chip.on{color:var(--green);border-color:var(--green)}
+    .status{color:var(--muted);font-size:.9rem;margin:0 0 14px}
+    .card{display:block;padding:16px 18px;margin-bottom:10px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,var(--panel),#0a1016);color:inherit;text-decoration:none}
+    .card:hover{border-color:var(--green)}
+    .src{color:var(--green);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
+    .card h2{font-size:1.05rem;margin:6px 0 4px}
+    .sum{color:var(--muted);font-size:.9rem;margin:0}
+    footer{color:var(--muted);font-size:.82rem;margin-top:36px;border-top:1px solid var(--line);padding-top:16px}
+  </style>
+</head>
+<body>
+<main>
+  <a class="back" href="/">← Mapa de Sinais</a>
+  <h1>Radar Notícias</h1>
+  <p class="lead">Manchetes dos portais. Clique no tema ou digite a palavra.</p>
+  <form id="form">
+    <input id="q" type="search" placeholder="política, fé, esportes, saúde..." autofocus>
+    <button type="submit">Buscar</button>
+  </form>
+  <div class="chips" id="chips"></div>
+  <p class="status" id="status">Carregando capa...</p>
+  <div id="list"></div>
+  <footer>Conteúdo informativo. Fontes externas. Não mistura loteria nem cripto.</footer>
+</main>
+<script>
+const CHIPS = [
+  ["Capa agora", ""],
+  ["Política", "política Brasil"],
+  ["Eleições", "eleições Brasil"],
+  ["Rio de Janeiro", "Rio de Janeiro"],
+  ["Economia", "economia Brasil"],
+  ["Empresas", "empresas Brasil"],
+  ["Saúde", "saúde Brasil"],
+  ["Esportes", "esportes futebol Brasileirão"],
+  ["Fé", "Igreja Vaticano Papa fé católica"],
+  ["Lazer", "lazer cultura cinema"],
+  ["Curiosidades", "curiosidades ciência"],
+  ["Paraísos", "turismo praias destinos Brasil"]
+];
+const chips = document.getElementById("chips");
+CHIPS.forEach(([label, q]) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "chip";
+  b.textContent = label;
+  b.onclick = () => { document.getElementById("q").value = q; load(q); };
+  chips.appendChild(b);
+});
+
+function esc(s){return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function srcOf(url){
+  try { return new URL(url).hostname.replace(/^www\./,""); } catch(e){ return "fonte"; }
+}
+
+async function load(q){
+  const status = document.getElementById("status");
+  const list = document.getElementById("list");
+  status.textContent = q ? "Buscando “" + q + "”..." : "Carregando capa...";
+  list.innerHTML = "";
+  const query = (q || "Brasil").trim();
+  const rss = "https://news.google.com/rss/search?q=" + encodeURIComponent(query) + "&hl=pt-BR&gl=BR&ceid=BR:pt-419";
+  const api = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(rss);
+  try {
+    const r = await fetch(api);
+    const data = await r.json();
+    const items = data.items || [];
+    if (!items.length) {
+      status.textContent = "Nenhum link encontrado.";
+      return;
+    }
+    status.textContent = items.length + " links · Google Notícias";
+    list.innerHTML = items.slice(0, 30).map(it => `
+      <a class="card" href="${esc(it.link)}" target="_blank" rel="noopener">
+        <div class="src">${esc(srcOf(it.link))}</div>
+        <h2>${esc(it.title)}</h2>
+        <p class="sum">${esc((it.description||"").replace(/<[^>]+>/g," ").slice(0,180))}</p>
+      </a>`).join("");
+  } catch (e) {
+    status.textContent = "Falha ao buscar. Tente de novo.";
+  }
+}
+document.getElementById("form").addEventListener("submit", ev => {
+  ev.preventDefault();
+  load(document.getElementById("q").value.trim());
+});
+load("");
+</script>
+</body>
+</html>
