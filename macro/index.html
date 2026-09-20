@@ -81,20 +81,29 @@
   <h2>Outros índices de preços</h2>
   <section class="grid">
     <div class="tile">
-      <small>IPCA-15</small>
-      <div class="sub">Prévia do IPCA no mês. Mesma cesta, período um pouco diferente. Serve como antecipação da inflação oficial.</div>
+      <small>IPCA-15 · prévia do IPCA</small>
+      <div class="val" id="ipca15">—</div>
+      <div class="sub" id="ipca15-d">Prévia da inflação oficial. Mesma cesta do IPCA, janela diferente no mês.</div>
     </div>
     <div class="tile">
-      <small>INPC</small>
-      <div class="sub">Inflação das famílias de menor renda (1 a 5 salários mínimos). Usado em reajustes de benefícios e salários.</div>
+      <small>INPC · renda menor</small>
+      <div class="val" id="inpc">—</div>
+      <div class="sub" id="inpc-d">Inflação das famílias de 1 a 5 salários mínimos. Usado em reajustes de benefícios.</div>
     </div>
     <div class="tile">
-      <small>IGP-M</small>
-      <div class="sub">Índice da FGV. Mistura preços ao produtor, ao consumidor e da construção. É o índice clássico de reajuste de aluguel.</div>
+      <small>IGP-M · aluguel</small>
+      <div class="val" id="igpm">—</div>
+      <div class="sub" id="igpm-d">Índice da FGV (produtor + consumidor + construção). Reajuste clássico de aluguel.</div>
     </div>
     <div class="tile">
-      <small>IGP-DI e IPC-Fipe</small>
-      <div class="sub">IGP-DI é o irmão do IGP-M, com outra janela do mês. IPC-Fipe mede o custo de vida só em São Paulo.</div>
+      <small>IGP-DI</small>
+      <div class="val" id="igpdi">—</div>
+      <div class="sub" id="igpdi-d">Irmão do IGP-M, com outra janela de coleta no mês. Também da FGV.</div>
+    </div>
+    <div class="tile">
+      <small>IPC-Fipe · São Paulo</small>
+      <div class="val" id="fipe">—</div>
+      <div class="sub" id="fipe-d">Custo de vida da cidade de São Paulo, medido pela Fipe.</div>
     </div>
   </section>
 
@@ -125,11 +134,16 @@ function ipca12(arr){
 (async () => {
   const status = document.getElementById("status");
   try {
-    const [selic, cdi, ipca, usd] = await Promise.all([
+    const [selic, cdi, ipca, usd, ipca15, inpc, igpm, igpdi, fipe] = await Promise.all([
       serie(432, 3),
       serie(12, 3),
       serie(433, 12),
-      serie(1, 5)
+      serie(1, 5),
+      serie(7478, 3),
+      serie(188, 3),
+      serie(189, 3),
+      serie(190, 3),
+      serie(193, 3)
     ]);
     const s = last(selic), c = last(cdi), u = last(usd);
     const acc = ipca12(ipca);
@@ -148,10 +162,26 @@ function ipca12(arr){
     const diff = acc - teto;
     document.getElementById("gap").textContent = acc <= teto && acc >= piso ? "dentro da banda" : (acc > teto ? "acima do teto" : "abaixo do piso");
     document.getElementById("gap-d").textContent = "IPCA 12m " + fmtPct(acc, 2) + " · teto 4,50% · diferença " + fmtPct(diff, 2);
+    function fillIdx(id, arr, extra){
+      const p = last(arr);
+      document.getElementById(id).textContent = p ? fmtPct(p.valor, 2) : "—";
+      if (p) document.getElementById(id+"-d").textContent = "variação no mês · " + p.data + ". " + extra;
+      return p;
+    }
+    const p15 = fillIdx("ipca15", ipca15, "Prévia da inflação oficial (IBGE).");
+    const pin = fillIdx("inpc", inpc, "Famílias de menor renda.");
+    const pgm = fillIdx("igpm", igpm, "Reajuste clássico de aluguel (FGV).");
+    const pdi = fillIdx("igpdi", igpdi, "Mesma família do IGP-M, outra janela.");
+    const pfi = fillIdx("fipe", fipe, "Custo de vida em São Paulo (Fipe).");
     const rows = [
       ["Selic meta", "432", s],
       ["CDI", "12", c],
       ["IPCA mensal (inflação oficial)", "433", im],
+      ["IPCA-15", "7478", p15],
+      ["INPC", "188", pin],
+      ["IGP-M", "189", pgm],
+      ["IGP-DI", "190", pdi],
+      ["IPC-Fipe", "193", pfi],
       ["Dólar PTAX", "1", u]
     ];
     document.getElementById("rows").innerHTML = rows.map(([n,cod,p]) =>
