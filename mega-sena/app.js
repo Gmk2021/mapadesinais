@@ -103,9 +103,9 @@ async function load(refresh=false){
     const result=await fetch(`/api/mega-data${refresh?`?t=${Date.now()}`:""}`);
     const payload=await result.json();
     if(!result.ok||!payload.ok)throw new Error(payload.erro||"Falha ao carregar");
-    allDraws=payload.draws;
+       allDraws=payload.draws;
     sourceInfo=payload;
-    prizeInfo=await loadLatestPrize();
+    prizeInfo = payload.premio || await loadLatestPrize();
     rerender();
   }
   catch(error){$("status").innerHTML=`<span class="err">${error.message} Tente novamente em alguns instantes.</span>`}
