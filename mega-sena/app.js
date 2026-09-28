@@ -16,17 +16,16 @@ function formatBRL(n) {
 
 function formatLastLine(u, prize) {
   const date = u.data || "";
-  if (!prize || Number(prize.concurso) !== Number(u.concurso)) return date;
-  const sena = (prize.premiacoes || []).find(p => p.faixa === 1) || {};
-  const winners = Number(sena.ganhadores || 0);
-  if (prize.acumulou || winners === 0) {
-    const next = formatBRL(prize.valorEstimadoProximoConcurso || prize.valorAcumuladoProximoConcurso);
+  if (!prize) return date;
+  const next = formatBRL(prize.valorEstimadoProximoConcurso);
+  const paid = formatBRL(prize.valorPremio);
+  const winners = Number(prize.ganhadores || 0);
+  const acumulou = prize.acumulou === true || winners === 0;
+  if (acumulou) {
     return date + " · acumulou" + (next ? " · próximo " + next : "");
   }
-  const paid = formatBRL(sena.valorPremio);
   return date + " · saiu" + (paid ? " · " + paid : "") + (winners ? " (" + winners + ")" : "");
 }
-
 async function loadLatestPrize() {
   try {
     const r = await fetch("https://loteriascaixa-api.herokuapp.com/api/megasena/latest");
