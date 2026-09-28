@@ -1,7 +1,39 @@
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2,"0");
+function formatBRL(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v <= 0) return "";
+  if (v >= 1e6) {
+    return "R$ " + (v / 1e6).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + " mi";
+  }
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+}
+
+function formatLastLine(u, prize) {
+  const date = u.data || "";
+  if (!prize || Number(prize.concurso) !== Number(u.concurso)) return date;
+  const sena = (prize.premiacoes || []).find(p => p.faixa === 1) || {};
+  const winners = Number(sena.ganhadores || 0);
+  if (prize.acumulou || winners === 0) {
+    const next = formatBRL(prize.valorEstimadoProximoConcurso || prize.valorAcumuladoProximoConcurso);
+    return date + " · acumulou" + (next ? " · próximo " + next : "");
+  }
+  const paid = formatBRL(sena.valorPremio);
+  return date + " · saiu" + (paid ? " · " + paid : "") + (winners ? " (" + winners + ")" : "");
+}
+
+async function loadLatestPrize() {
+  try {
+    const r = await fetch("https://loteriascaixa-api.herokuapp.com/api/megasena/latest");
+    if (!r.ok) return null;
+    return await r.json();
+  } catch {
+    return null;
+  }
+}
 let allDraws = [];
 let sourceInfo = {};
+let prizeInfo = null;
 
 function analyse(draws, windowSize) {
   const subset = windowSize ? draws.slice(-windowSize) : draws;
@@ -54,7 +86,7 @@ const delayClass = value => value<=3?"hot":value<=12?"warm":"cold";
 function render(d){
   $("status").innerHTML=`Fonte: ${sourceInfo.fonte||"—"} · atualizado ${new Date(sourceInfo.atualizado_em).toLocaleString("pt-BR")} · ${d.total_historico} concursos · janela: ${d.concursos_analisados}${sourceInfo.aviso?` <span class="err">· ${sourceInfo.aviso}</span>`:""}`;
   const u=d.ultimo;
-  $("cards").innerHTML=[["Último concurso",u.concurso,u.data],["Dezenas",u.dezenas.map(pad).join("  "),`pares ${u.pares} · ímpares ${u.impares}`],["Soma do último",u.soma,`média da janela ${d.soma.media}`],["Concursos na janela",d.concursos_analisados,`freq. esperada ≈ ${d.esperanca_freq}`],["Média pares",d.par_impar.media_pares,`ímpares ${d.par_impar.media_impares}`],["Soma min / máx",`${d.soma.min} / ${d.soma.max}`,"das 6 dezenas"]].map(([k,v,s])=>`<div class="card"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+ $("cards").innerHTML=[["Último concurso",u.concurso,formatLastLine(u, prizeInfo)],["Dezenas",u.dezenas.map(pad).join("  "),`pares ${u.pares} · ímpares ${u.impares}`],["Soma do último",u.soma,`média da janela ${d.soma.media}`],["Concursos na janela",d.concursos_analisados,`freq. esperada ≈ ${d.esperanca_freq}`],["Média pares",d.par_impar.media_pares,`ímpares ${d.par_impar.media_impares}`],["Soma min / máx",`${d.soma.min} / ${d.soma.max}`,"das 6 dezenas"]].map(([k,v,s])=>`<div class="card"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
   $("balls").innerHTML=d.dezenas.map(x=>`<article class="ball ${delayClass(x.atraso)}"><div class="num">${pad(x.n)}</div><div class="meta">freq <b>${x.freq}</b> · ${x.pct}%<br>atraso <b>${x.atraso}</b> · ${x.tendencia}</div>${spark(x.spark)}</article>`).join("");
   const table=arr=>`<table><thead><tr><th>#</th><th>freq.</th><th>atraso</th></tr></thead><tbody>${arr.map(x=>`<tr><td>${chips([x.n])}</td><td>${x.freq}</td><td>${x.atraso}</td></tr>`).join("")}</tbody></table>`;
   $("mais").innerHTML=table(d.mais); $("menos").innerHTML=table(d.menos); $("atraso").innerHTML=table(d.atrasadas);
@@ -67,7 +99,15 @@ function render(d){
 function rerender(){render(analyse(allDraws,$("janela").value==="todos"?null:Number($("janela").value)))}
 async function load(refresh=false){
   const button=$("btn"); button.disabled=true; button.textContent=refresh?"Atualizando…":"Carregando…";
-  try{const result=await fetch(`/api/mega-data${refresh?`?t=${Date.now()}`:""}`);const payload=await result.json();if(!result.ok||!payload.ok)throw new Error(payload.erro||"Falha ao carregar");allDraws=payload.draws;sourceInfo=payload;rerender()}
+  try{
+    const result=await fetch(`/api/mega-data${refresh?`?t=${Date.now()}`:""}`);
+    const payload=await result.json();
+    if(!result.ok||!payload.ok)throw new Error(payload.erro||"Falha ao carregar");
+    allDraws=payload.draws;
+    sourceInfo=payload;
+    prizeInfo=await loadLatestPrize();
+    rerender();
+  }
   catch(error){$("status").innerHTML=`<span class="err">${error.message} Tente novamente em alguns instantes.</span>`}
   finally{button.disabled=false;button.textContent="Atualizar histórico"}
 }
