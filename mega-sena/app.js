@@ -1,5 +1,10 @@
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2,"0");
+
+let allDraws = [];
+let sourceInfo = {};
+let prizeInfo = null;
+
 function formatBRL(n) {
   const v = Number(n);
   if (!Number.isFinite(v) || v <= 0) return "";
@@ -31,9 +36,6 @@ async function loadLatestPrize() {
     return null;
   }
 }
-let allDraws = [];
-let sourceInfo = {};
-let prizeInfo = null;
 
 function analyse(draws, windowSize) {
   const subset = windowSize ? draws.slice(-windowSize) : draws;
