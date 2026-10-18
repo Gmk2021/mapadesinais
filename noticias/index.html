@@ -35,7 +35,7 @@
   <h1>Radar Notícias</h1>
   <p class="lead">Manchetes dos portais. Clique no tema ou digite a palavra.</p>
   <form id="form">
-    <input id="q" type="search" placeholder="política, fé, esportes, saúde..." autofocus>
+    <input id="q" type="search" placeholder="politica, fe, esportes, saude..." autofocus>
     <button type="submit">Buscar</button>
   </form>
   <div class="chips" id="chips"></div>
@@ -44,62 +44,83 @@
   <footer>Conteúdo informativo. Fontes externas. Não mistura loteria nem cripto.</footer>
 </main>
 <script>
-const CHIPS = [
+var CHIPS = [
   ["Capa agora", "Brasil"],
-  ["Política", "política Brasil"],
-  ["Eleições", "eleições Brasil"],
+  ["Politica", "politica Brasil"],
+  ["Eleicoes", "eleicoes Brasil"],
   ["Rio de Janeiro", "Rio de Janeiro"],
   ["Economia", "economia Brasil"],
   ["Empresas", "empresas Brasil"],
-  ["Saúde", "saúde Brasil"],
-  ["Esportes", "esportes futebol Brasileirão"],
-  ["Fé", "Igreja Vaticano Papa fé católica"],
+  ["Saude", "saude Brasil"],
+  ["Esportes", "esportes futebol Brasileirao"],
+  ["Fe", "Igreja Vaticano Papa fe catolica"],
   ["Lazer", "lazer cultura cinema"],
-  ["Curiosidades", "curiosidades ciência"],
-  ["Paraísos", "turismo praias destinos Brasil"]
+  ["Curiosidades", "curiosidades ciencia"],
+  ["Paraisos", "turismo praias destinos Brasil"]
 ];
-const chips = document.getElementById("chips");
-CHIPS.forEach(([label, q]) => {
-  const b = document.createElement("button");
+var chipsEl = document.getElementById("chips");
+CHIPS.forEach(function (pair) {
+  var label = pair[0];
+  var q = pair[1];
+  var b = document.createElement("button");
   b.type = "button";
   b.className = "chip";
   b.textContent = label;
-  b.onclick = () => { document.getElementById("q").value = q; load(q); };
-  chips.appendChild(b);
+  b.onclick = function () {
+    document.getElementById("q").value = q;
+    load(q);
+  };
+  chipsEl.appendChild(b);
 });
 
-function esc(s){return (s||"").replace(/[&<>"']/g,c=>({"&":"&","<":"<",">":">","\"":""","'":"&#39;"}[c]));}
-function srcOf(url, source){
-  if (source && source !== "news.google.com") return source;
-  try { return new URL(url).hostname.replace(/^www\./,""); } catch(e){ return "fonte"; }
+function hostOf(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ""); }
+  catch (e) { return "fonte"; }
 }
 
-async function load(q){
-  const status = document.getElementById("status");
-  const list = document.getElementById("list");
-  const query = (q || "Brasil").trim();
-  status.textContent = query ? "Buscando “" + query + "”..." : "Carregando capa...";
-  list.innerHTML = "";
-  try {
-    const r = await fetch("/.netlify/functions/news?q=" + encodeURIComponent(query));
-    const data = await r.json();
-    const items = data.items || [];
-    if (!items.length) {
-      status.innerHTML = "Nenhum link encontrado. <a style=\"color:var(--green)\" target=\"_blank\" rel=\"noopener\" href=\"https://news.google.com/search?q=" + encodeURIComponent(query) + "&hl=pt-BR&gl=BR&ceid=BR:pt-419\">Abrir no Google Notícias</a>";
-      return;
-    }
-    status.textContent = items.length + " links · Google Notícias";
-    list.innerHTML = items.slice(0, 30).map(it => `
-      <a class="card" href="${esc(it.link)}" target="_blank" rel="noopener">
-        <div class="src">${esc(srcOf(it.link, it.source))}</div>
-        <h2>${esc(it.title)}</h2>
-        <p class="sum">${esc(it.description || "")}</p>
-      </a>`).join("");
-  } catch (e) {
-    status.innerHTML = "Falha ao buscar. <a style=\"color:var(--green)\" target=\"_blank\" rel=\"noopener\" href=\"https://news.google.com/search?q=" + encodeURIComponent(query) + "&hl=pt-BR&gl=BR&ceid=BR:pt-419\">Abrir no Google Notícias</a>";
-  }
+function card(it) {
+  var a = document.createElement("a");
+  a.className = "card";
+  a.href = it.link;
+  a.target = "_blank";
+  a.rel = "noopener";
+  var src = document.createElement("div");
+  src.className = "src";
+  src.textContent = it.source || hostOf(it.link);
+  var h2 = document.createElement("h2");
+  h2.textContent = it.title || "";
+  var p = document.createElement("p");
+  p.className = "sum";
+  p.textContent = (it.description || "").replace(/<[^>]+>/g, " ").slice(0, 180);
+  a.appendChild(src);
+  a.appendChild(h2);
+  a.appendChild(p);
+  return a;
 }
-document.getElementById("form").addEventListener("submit", ev => {
+
+function load(q) {
+  var status = document.getElementById("status");
+  var list = document.getElementById("list");
+  var query = (q || "Brasil").trim();
+  status.textContent = "Buscando: " + query + "...";
+  list.textContent = "";
+  fetch("/.netlify/functions/news?q=" + encodeURIComponent(query))
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var items = data.items || [];
+      if (!items.length) {
+        status.textContent = "Nenhum link encontrado.";
+        return;
+      }
+      status.textContent = items.length + " links - Google Noticias";
+      items.slice(0, 30).forEach(function (it) { list.appendChild(card(it)); });
+    })
+    .catch(function () {
+      status.textContent = "Falha ao buscar. Tente de novo.";
+    });
+}
+
+document.getElementById("form").addEventListener("submit", function (ev) {
   ev.preventDefault();
   load(document.getElementById("q").value.trim());
 });
