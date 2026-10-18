@@ -45,7 +45,7 @@
 </main>
 <script>
 const CHIPS = [
-  ["Capa agora", ""],
+  ["Capa agora", "Brasil"],
   ["Política", "política Brasil"],
   ["Eleições", "eleições Brasil"],
   ["Rio de Janeiro", "Rio de Janeiro"],
@@ -68,43 +68,42 @@ CHIPS.forEach(([label, q]) => {
   chips.appendChild(b);
 });
 
-function esc(s){return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
-function srcOf(url){
+function esc(s){return (s||"").replace(/[&<>"']/g,c=>({"&":"&","<":"<",">":">","\"":""","'":"&#39;"}[c]));}
+function srcOf(url, source){
+  if (source && source !== "news.google.com") return source;
   try { return new URL(url).hostname.replace(/^www\./,""); } catch(e){ return "fonte"; }
 }
 
 async function load(q){
   const status = document.getElementById("status");
   const list = document.getElementById("list");
-  status.textContent = q ? "Buscando “" + q + "”..." : "Carregando capa...";
-  list.innerHTML = "";
   const query = (q || "Brasil").trim();
-  const rss = "https://news.google.com/rss/search?q=" + encodeURIComponent(query) + "&hl=pt-BR&gl=BR&ceid=BR:pt-419";
-  const api = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(rss);
+  status.textContent = query ? "Buscando “" + query + "”..." : "Carregando capa...";
+  list.innerHTML = "";
   try {
-    const r = await fetch(api);
+    const r = await fetch("/.netlify/functions/news?q=" + encodeURIComponent(query));
     const data = await r.json();
     const items = data.items || [];
     if (!items.length) {
-      status.textContent = "Nenhum link encontrado.";
+      status.innerHTML = "Nenhum link encontrado. <a style=\"color:var(--green)\" target=\"_blank\" rel=\"noopener\" href=\"https://news.google.com/search?q=" + encodeURIComponent(query) + "&hl=pt-BR&gl=BR&ceid=BR:pt-419\">Abrir no Google Notícias</a>";
       return;
     }
     status.textContent = items.length + " links · Google Notícias";
     list.innerHTML = items.slice(0, 30).map(it => `
       <a class="card" href="${esc(it.link)}" target="_blank" rel="noopener">
-        <div class="src">${esc(srcOf(it.link))}</div>
+        <div class="src">${esc(srcOf(it.link, it.source))}</div>
         <h2>${esc(it.title)}</h2>
-        <p class="sum">${esc((it.description||"").replace(/<[^>]+>/g," ").slice(0,180))}</p>
+        <p class="sum">${esc(it.description || "")}</p>
       </a>`).join("");
   } catch (e) {
-    status.textContent = "Falha ao buscar. Tente de novo.";
+    status.innerHTML = "Falha ao buscar. <a style=\"color:var(--green)\" target=\"_blank\" rel=\"noopener\" href=\"https://news.google.com/search?q=" + encodeURIComponent(query) + "&hl=pt-BR&gl=BR&ceid=BR:pt-419\">Abrir no Google Notícias</a>";
   }
 }
 document.getElementById("form").addEventListener("submit", ev => {
   ev.preventDefault();
   load(document.getElementById("q").value.trim());
 });
-load("");
+load("Brasil");
 </script>
 </body>
 </html>
