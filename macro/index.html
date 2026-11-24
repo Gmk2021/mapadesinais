@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Radar Macro · Mapa de Sinais</title>
-  <meta name="description" content="Selic, CDI, inflação oficial (IPCA), meta do Banco Central e outros índices.">
+  <meta name="description" content="Selic, CDI, inflação oficial (IPCA), meta do Banco Central e outros índices. Estatística do passado — não é previsão.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307090d'/%3E%3Cpath d='M12 45L25 32l9 7 18-21' fill='none' stroke='%233dff9a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <style>
-    :root{color-scheme:dark;--bg:#07090d;--panel:#0e141b;--line:#1c2a38;--text:#d7e3ef;--muted:#8297ab;--green:#3dff9a}
+    :root{color-scheme:dark;--bg:#07090d;--panel:#0e141b;--line:#1c2a38;--text:#d7e3ef;--muted:#8297ab;--green:#3dff9a;--amber:#ffc14a;--red:#ff6b7a}
     *{box-sizing:border-box}
     body{margin:0;min-height:100vh;background:radial-gradient(900px 450px at 12% -10%,#0b2a22,transparent 55%),radial-gradient(700px 350px at 100% 0,#0a1d33,transparent 48%),var(--bg);color:var(--text);font:16px/1.5 Inter,Segoe UI,system-ui,sans-serif}
     main{width:min(1080px,calc(100% - 32px));margin:auto;padding:36px 0 64px}
@@ -20,8 +20,9 @@
     .tile small{color:var(--green);letter-spacing:.1em;text-transform:uppercase;font-size:.72rem}
     .tile .val{font-size:2rem;font-weight:700;margin:10px 0 4px}
     .tile .sub{color:var(--muted);font-size:.88rem;line-height:1.45}
-    .wide{grid-column:1 / -1}
-    @media(min-width:900px){.wide{grid-column:auto}}
+    .ok{color:var(--green)}
+    .warn{color:var(--amber)}
+    .bad{color:var(--red)}
     table{width:100%;border-collapse:collapse;font-size:.92rem;margin-top:22px}
     th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
     th{color:var(--muted);font-weight:600;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase}
@@ -111,84 +112,130 @@
     <thead><tr><th>Série</th><th>Código SGS</th><th>Último</th><th>Data</th></tr></thead>
     <tbody id="rows"></tbody>
   </table>
-  <p class="note" id="status">Fonte: Banco Central (SGS/PTAX) e meta do CMN/BC. IPCA é calculado pelo IBGE.</p>
+  <p class="note" id="status">Lendo Banco Central…</p>
   <footer>Conteúdo informativo. Não constitui recomendação de investimento.</footer>
 </main>
 <script>
 const SGS = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.";
+
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
 async function serie(id, n){
   const url = SGS + id + "/dados/ultimos/" + n + "?formato=json";
-  const r = await fetch(url);
-  if(!r.ok) throw new Error("sgs "+id);
-  return r.json();
+  for (let i = 0; i < 2; i++){
+    try {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error("sgs " + id + " " + r.status);
+      const data = await r.json();
+      if (Array.isArray(data) && data.length) return data;
+    } catch (e) { /* tenta de novo */ }
+    await sleep(350);
+  }
+  return null;
 }
-function last(arr){ return arr && arr.length ? arr[arr.length-1] : null; }
-function num(v){ return Number(String(v).replace(",",".")); }
-function fmtPct(v, casas){ return num(v).toFixed(casas).replace(".",",") + "%"; }
-function fmtNum(v, casas){ return num(v).toFixed(casas).replace(".",","); }
-function ipca12(arr){
-  let acc = 1;
-  arr.forEach(p => { acc *= 1 + num(p.valor) / 100; });
-  return (acc - 1) * 100;
+
+function last(arr){ return arr && arr.length ? arr[arr.length - 1] : null; }
+function num(v){ return Number(String(v).replace(",", ".")); }
+function fmtPct(v, casas){ return num(v).toFixed(casas).replace(".", ",") + "%"; }
+function fmtNum(v, casas){ return num(v).toFixed(casas).replace(".", ","); }
+
+function cdiAno(diario){
+  const d = num(diario) / 100;
+  return (Math.pow(1 + d, 252) - 1) * 100;
 }
+
+function setText(id, value){
+  const el = document.getElementById(id);
+  if (el && value != null) el.textContent = value;
+}
+
+function fillIdx(id, point, extra){
+  if (!point) return null;
+  setText(id, fmtPct(point.valor, 2));
+  setText(id + "-d", "variação no mês · " + point.data + ". " + extra);
+  return point;
+}
+
 (async () => {
   const status = document.getElementById("status");
-  try {
-    const [selic, cdi, ipca, usd, ipca15, inpc, igpm, igpdi, fipe] = await Promise.all([
-      serie(432, 3),
-      serie(12, 3),
-      serie(433, 12),
-      serie(1, 5),
-      serie(7478, 3),
-      serie(188, 3),
-      serie(189, 3),
-      serie(190, 3),
-      serie(193, 3)
-    ]);
-    const s = last(selic), c = last(cdi), u = last(usd);
-    const acc = ipca12(ipca);
-    const im = last(ipca);
-    document.getElementById("selic").textContent = s ? fmtPct(s.valor, 2) : "—";
-    document.getElementById("selic-d").textContent = s ? "juros básicos · " + s.data : "";
-    document.getElementById("cdi").textContent = c ? fmtPct(c.valor, 2) : "—";
-    document.getElementById("cdi-d").textContent = c ? "diário · " + c.data : "";
-    document.getElementById("ipca").textContent = fmtPct(acc, 2);
-    document.getElementById("ipca-d").textContent = im
-      ? "Índice oficial de inflação (IBGE). Mês " + im.data + " · " + fmtPct(im.valor, 2)
-      : "Índice oficial de inflação do Brasil, medido pelo IBGE.";
-    document.getElementById("usd").textContent = u ? "R$ " + fmtNum(u.valor, 4) : "—";
-    document.getElementById("usd-d").textContent = u ? "PTAX venda · " + u.data : "";
-    const teto = 4.5, piso = 1.5;
+  const rows = [];
+  let ok = 0;
+
+  async function pull(nome, cod, n){
+    const arr = await serie(cod, n);
+    const p = last(arr);
+    if (p) ok++;
+    rows.push([nome, String(cod), p]);
+    await sleep(180);
+    return p;
+  }
+
+  const s = await pull("Selic meta", 432, 3);
+  const c = await pull("CDI diário", 12, 3);
+  const ipca12pt = await pull("IPCA 12 meses", 13522, 1);
+  const im = await pull("IPCA mensal (inflação oficial)", 433, 3);
+  const u = await pull("Dólar PTAX", 1, 5);
+  const p15 = await pull("IPCA-15", 7478, 1);
+  const pin = await pull("INPC", 188, 1);
+  const pgm = await pull("IGP-M", 189, 1);
+  const pdi = await pull("IGP-DI", 190, 1);
+  const pfi = await pull("IPC-Fipe", 193, 1);
+
+  if (s){
+    setText("selic", fmtPct(s.valor, 2));
+    setText("selic-d", "juros básicos · " + s.data);
+  }
+  if (c){
+    const ano = cdiAno(c.valor);
+    setText("cdi", fmtPct(ano, 2));
+    setText("cdi-d", "ao ano (base 252) · diário " + fmtPct(c.valor, 4) + " · " + c.data);
+  }
+  if (ipca12pt){
+    setText("ipca", fmtPct(ipca12pt.valor, 2));
+    setText("ipca-d", im
+      ? "Índice oficial (IBGE). Mês " + im.data + " · " + fmtPct(im.valor, 2) + " · 12 meses " + ipca12pt.data
+      : "Acumulado em 12 meses · " + ipca12pt.data);
+  } else if (im){
+    setText("ipca", "—");
+    setText("ipca-d", "IPCA mensal " + fmtPct(im.valor, 2) + " · " + im.data);
+  }
+  if (u){
+    setText("usd", "R$ " + fmtNum(u.valor, 4));
+    setText("usd-d", "PTAX venda · " + u.data);
+  }
+
+  const teto = 4.5, piso = 1.5;
+  if (ipca12pt){
+    const acc = num(ipca12pt.valor);
     const diff = acc - teto;
-    document.getElementById("gap").textContent = acc <= teto && acc >= piso ? "dentro da banda" : (acc > teto ? "acima do teto" : "abaixo do piso");
-    document.getElementById("gap-d").textContent = "IPCA 12m " + fmtPct(acc, 2) + " · teto 4,50% · diferença " + fmtPct(diff, 2);
-    function fillIdx(id, arr, extra){
-      const p = last(arr);
-      document.getElementById(id).textContent = p ? fmtPct(p.valor, 2) : "—";
-      if (p) document.getElementById(id+"-d").textContent = "variação no mês · " + p.data + ". " + extra;
-      return p;
+    const gap = document.getElementById("gap");
+    if (acc > teto){
+      gap.textContent = "acima do teto";
+      gap.className = "val bad";
+    } else if (acc < piso){
+      gap.textContent = "abaixo do piso";
+      gap.className = "val warn";
+    } else {
+      gap.textContent = "dentro da banda";
+      gap.className = "val ok";
     }
-    const p15 = fillIdx("ipca15", ipca15, "Prévia da inflação oficial (IBGE).");
-    const pin = fillIdx("inpc", inpc, "Famílias de menor renda.");
-    const pgm = fillIdx("igpm", igpm, "Reajuste clássico de aluguel (FGV).");
-    const pdi = fillIdx("igpdi", igpdi, "Mesma família do IGP-M, outra janela.");
-    const pfi = fillIdx("fipe", fipe, "Custo de vida em São Paulo (Fipe).");
-    const rows = [
-      ["Selic meta", "432", s],
-      ["CDI", "12", c],
-      ["IPCA mensal (inflação oficial)", "433", im],
-      ["IPCA-15", "7478", p15],
-      ["INPC", "188", pin],
-      ["IGP-M", "189", pgm],
-      ["IGP-DI", "190", pdi],
-      ["IPC-Fipe", "193", pfi],
-      ["Dólar PTAX", "1", u]
-    ];
-    document.getElementById("rows").innerHTML = rows.map(([n,cod,p]) =>
-      `<tr><td>${n}</td><td>${cod}</td><td>${p ? p.valor : "—"}</td><td>${p ? p.data : "—"}</td></tr>`
-    ).join("");
-    status.textContent = "Fonte: Banco Central (SGS). IPCA calculado pelo IBGE. Meta: centro 3%, banda 1,5% a 4,5%.";
-  } catch (e) {
+    setText("gap-d", "IPCA 12m " + fmtPct(acc, 2) + " · teto 4,50% · diferença " + fmtPct(diff, 2));
+  }
+
+  fillIdx("ipca15", p15, "Prévia da inflação oficial (IBGE).");
+  fillIdx("inpc", pin, "Famílias de menor renda.");
+  fillIdx("igpm", pgm, "Reajuste clássico de aluguel (FGV).");
+  fillIdx("igpdi", pdi, "Mesma família do IGP-M, outra janela.");
+  fillIdx("fipe", pfi, "Custo de vida em São Paulo (Fipe).");
+
+  document.getElementById("rows").innerHTML = rows.map(([n, cod, p]) =>
+    `<tr><td>${n}</td><td>${cod}</td><td>${p ? p.valor : "—"}</td><td>${p ? p.data : "—"}</td></tr>`
+  ).join("");
+
+  if (ok){
+    status.textContent = "Fonte: Banco Central (SGS) e IBGE. " + ok + " de " + rows.length +
+      " séries lidas. Meta: centro 3%, banda 1,5% a 4,5%. CDI mostrado ao ano (base 252).";
+  } else {
     status.textContent = "Não foi possível ler o Banco Central agora. Recarregue em instantes.";
   }
 })();
