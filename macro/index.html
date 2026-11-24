@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Radar Macro · Mapa de Sinais</title>
-  <meta name="description" content="Selic, CDI, inflação oficial (IPCA), meta do Banco Central e outros índices. Estatística do passado — não é previsão.">
+  <meta name="description" content="Selic, CDI, IPCA, dólar PTAX e preço do barril de petróleo Brent. Estatística do passado — não é previsão.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307090d'/%3E%3Cpath d='M12 45L25 32l9 7 18-21' fill='none' stroke='%233dff9a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <style>
     :root{color-scheme:dark;--bg:#07090d;--panel:#0e141b;--line:#1c2a38;--text:#d7e3ef;--muted:#8297ab;--green:#3dff9a;--amber:#ffc14a;--red:#ff6b7a}
@@ -34,7 +34,7 @@
 <main>
   <a class="back" href="/">← Mapa de Sinais</a>
   <h1>Radar Macro</h1>
-  <p class="lead">Série histórica do Banco Central e do IBGE. Estatística do passado — não é previsão.</p>
+  <p class="lead">Série histórica do Banco Central, do IBGE e do petróleo Brent. Estatística do passado — não é previsão.</p>
 
   <h2>Indicadores do dia</h2>
   <section class="grid">
@@ -57,6 +57,11 @@
       <small>Dólar PTAX</small>
       <div class="val" id="usd">—</div>
       <div class="sub" id="usd-d">cotação de referência do Banco Central</div>
+    </div>
+    <div class="tile">
+      <small>Petróleo Brent</small>
+      <div class="val" id="oil">—</div>
+      <div class="sub" id="oil-d">preço do barril em dólares · referência internacional</div>
     </div>
   </section>
 
@@ -144,6 +149,16 @@ function cdiAno(diario){
   return (Math.pow(1 + d, 252) - 1) * 100;
 }
 
+async function pullOil(){
+  try {
+    const r = await fetch("https://americasoilwatch.com/api/v1/brent", { cache: "no-store" });
+    if (!r.ok) return null;
+    const data = await r.json();
+    if (data && data.priceUsd != null) return data;
+  } catch (e) { /* ignora */ }
+  return null;
+}
+
 function setText(id, value){
   const el = document.getElementById(id);
   if (el && value != null) el.textContent = value;
@@ -180,6 +195,7 @@ function fillIdx(id, point, extra){
   const pgm = await pull("IGP-M", 189, 1);
   const pdi = await pull("IGP-DI", 190, 1);
   const pfi = await pull("IPC-Fipe", 193, 1);
+  const oil = await pullOil();
 
   if (s){
     setText("selic", fmtPct(s.valor, 2));
@@ -228,13 +244,22 @@ function fillIdx(id, point, extra){
   fillIdx("igpdi", pdi, "Mesma família do IGP-M, outra janela.");
   fillIdx("fipe", pfi, "Custo de vida em São Paulo (Fipe).");
 
+  if (oil){
+    ok++;
+    setText("oil", "US$ " + fmtNum(oil.priceUsd, 2));
+    const ch = oil.changePct;
+    const chTxt = ch == null ? "" : (ch > 0 ? " · +" : " · ") + fmtNum(ch, 2) + "%";
+    setText("oil-d", "barril · Brent · " + (oil.sessionDate || "") + chTxt);
+    rows.push(["Petróleo Brent (barril)", "—", { valor: oil.priceUsd, data: oil.sessionDate || "—" }]);
+  }
+
   document.getElementById("rows").innerHTML = rows.map(([n, cod, p]) =>
     `<tr><td>${n}</td><td>${cod}</td><td>${p ? p.valor : "—"}</td><td>${p ? p.data : "—"}</td></tr>`
   ).join("");
 
   if (ok){
-    status.textContent = "Fonte: Banco Central (SGS) e IBGE. " + ok + " de " + rows.length +
-      " séries lidas. Meta: centro 3%, banda 1,5% a 4,5%. CDI mostrado ao ano (base 252).";
+    status.textContent = "Fonte: Banco Central (SGS), IBGE e cotação do Brent. " + ok + " de " + rows.length +
+      " séries lidas. Meta: centro 3%, banda 1,5% a 4,5%. CDI ao ano (base 252). Petróleo em US$ por barril.";
   } else {
     status.textContent = "Não foi possível ler o Banco Central agora. Recarregue em instantes.";
   }
